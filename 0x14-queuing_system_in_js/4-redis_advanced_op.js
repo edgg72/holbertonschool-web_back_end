@@ -1,25 +1,24 @@
 import redis from 'redis';
-const { promisify } = require("util");
-
 const client = redis.createClient();
-const hgetall = promisify(client.hgetall).bind(client);
 
+client.on("error", (error) => {
+    if (error) console.log(`Redis client not connected to the server: ${error}`)
+  }).on('ready', () => {
+      console.log('Redis client connected to the server');
+  });
 
-async function main() {
-    const values = {
-        Portland: 50,
-        Seattle: 80,
-        'New York': 20,
-        Bogota: 20,
-        Cali: 40,
-        Paris: 2,
-    };
+const name = 'HolbertonSchools';
+const values = {'Portland': 50,
+               'Seattle': 80,
+               'New York': 20,
+               'Bogota': 20,
+               'Cali': 40,
+               'Paris': 2}
 
-    for (const value in values) {
-        client.hset('HolbertonSchools', value, values[value], redis.print);
-    }
-
-    const storedObject = await hgetall('HolbertonSchools');
-    console.log(storedObject);
+for (const [key, val] of Object.entries(values)) {
+  client.hset(name, key, val, (error, reply) =>
+    redis.print((`Reply: ${reply}`))
+  );
 }
-main();
+
+client.hgetall(name, (error, object) => console.log(object));
